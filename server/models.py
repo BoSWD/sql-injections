@@ -42,55 +42,19 @@ class Database:
         self.db_conn.close()
 
 
-class News(Database):
-    table_name = "news"
-
-    def _create_table(self):
-        try:
-            self.cursor.execute("""CREATE TABLE news (id text, title text, content text)""")
-            self.db_conn.commit()
-        except Exception as exc:
-            print("Error ",  str(exc))
-            pass
-
-    def filter_by_title(self, title):
-        return self.filter_by("title", title)
-
-    def get_all_news(self):
-        try:
-            self.cursor.execute(f"SELECT title from {self.table_name}")
-            return self.cursor.fetchall()
-        except Exception as exc:
-            print(exc)
-            return []
-
-
 class User(Database):
     table_name = "users"
 
     @exception_pass
-    def _create_table(self):
+    def create_table(self):
         self.cursor.execute(
-            f"""CREATE TABLE {self.table_name} (id text, username text, mail text, password text, superuser bit)""")
+            f"""CREATE TABLE {self.table_name} (username text, password text, secret text)""")
         self.db_conn.commit()
 
     @exception_pass
     def find_user(self, username, password):
         self.cursor.execute(
-            f"SELECT username, mail from {self.table_name} WHERE username = '{username}' and password = '{password}'")
-        return self.cursor.fetchone()
-
-    def is_admin(self, username):
-        user = self.find_one("username", username)
-        if user and user[-1] == 1:
-            return True
-        return False
-
-    @exception_pass
-    def get_users(self, username):
-        if not self.is_admin(username):
-            return []
-        self.cursor.execute(f"SELECT id username mail from {self.table_name}")
+            f"SELECT secret from {self.table_name} WHERE username = '{username}' and password = '{password}'")
         return self.cursor.fetchall()
 
 
@@ -102,18 +66,8 @@ def base_example(db_path=os.path.join(os.path.dirname(os.path.dirname(__file__))
         {"username": "Ivan", "password": "1234", "mail": "ivan1995@mail.com", "superuser": 0},
         {"username": "Betty", "password": "qwerty", "mail": "betty2000@mail.com", "superuser": 0}
     ]
-    news = [
-        {"title": "SQLi", "content": "You can try extract this data."},
-        {"title": "Authentication", "content": "Required protected password with hashing."},
-        {"title": "Secret base", "content": "Extracting secret availbale for admin user."},
-        {"title": "Passwords", "content": "Save passwords as plain text is a not good idea."}
-    ]
-    with User(db_path) as users_m, News(db_path) as news_m:
+    with User(db_path) as users_m:
         users_m.create_table()
-        news_m.create_table()
 
         for user in users:
             users_m.add(str(uuid.uuid4()), user["username"], user["mail"], user["password"], user["superuser"])
-
-        for new in news:
-            news_m.add(str(uuid.uuid4()), new["title"], new["content"])
