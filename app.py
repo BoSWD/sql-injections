@@ -29,7 +29,6 @@ def login():
 @app.route('/users')
 def list_users():
     secret = request.args.get("secret")
-    count = request.args.get("secret")
     with Database() as db:
         db.execute(f"SELECT secret FROM users WHERE secret = '{secret}'")
         data = db.fetchone()
