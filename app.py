@@ -30,7 +30,7 @@ def login():
 def list_users():
     secret = request.args.get("secret")
     with Database() as db:
-        db.execute(f"SELECT secret FROM users WHERE secret = '{secret}'")
+        db.execute(f"SELECT secret FROM users WHERE secret = '{secret}' and username = 'root'")
         data = db.fetchone()
         if data is None:
             return "Not permitted"
